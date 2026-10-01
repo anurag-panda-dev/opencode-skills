@@ -1,6 +1,6 @@
 ---
 name: Animated Landing Page
-description: Build a dark, glassmorphic marketing landing page in the style of M.I.L.F. Shiksha — CSS-first scroll reveals, staggered hero entrance, animated counters, layered gradient depth — with opt-in options for 3D animation (depth scenes, scroll-driven 3D, 3D carousel), 3D interaction (pointer tilt cards, flip cards, pointer parallax), and micro-interactions (magnetic buttons, shine sweeps, marquees, ripples, cursor glow). Use when creating or restyling a landing page, hero section, or marketing homepage, or when asked for animated, 3D, or micro-interaction effects.
+description: Build a dark, glassmorphic marketing landing page in the style — CSS-first scroll reveals, staggered hero entrance, animated counters, layered gradient depth — with opt-in options for 3D animation (depth scenes, scroll-driven 3D, 3D carousel), 3D interaction (pointer tilt cards, flip cards, pointer parallax), and micro-interactions (magnetic buttons, shine sweeps, marquees, ripples, cursor glow). Use when creating or restyling a landing page, hero section, or marketing homepage, or when asked for animated, 3D, or micro-interaction effects.
 ---
 
 # Animated Landing Page (Shiksha style)
