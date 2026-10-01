@@ -1,0 +1,344 @@
+/* ═══════════════════════════════════════════════════════════════════════
+   landing-motion.css — the complete CSS motion layer for an animated
+   landing page (Shiksha style). Import once, after Tailwind, from your
+   global stylesheet (e.g. `@import './landing-motion.css';` in globals.css).
+
+   Conventions baked in — keep them when extending:
+     - easing  : cubic-bezier(0.22, 1, 0.36, 1) for entrances/hovers,
+                  linear only for infinite loops, spring for playful returns
+     - animate : `transform` and `opacity` only — never blur/shadow/layout
+     - above the fold = pure CSS (plays pre-hydration)
+       below the fold  = the `Reveal` observer component
+     - `animation` shorthand is NOT additive: never two animation-setting
+       classes on one element — nest them (.hero-rise > .text-shine)
+     - EVERY new animation class needs an entry in the reduced-motion block
+       at the bottom. A duration override alone does not cancel
+       `animation-delay` or class-driven hidden states.
+
+   Color custom properties read with fallbacks so this file works before
+   the design tokens are ported: --alpha/--beta/--gamma/--delta are your
+   four brand accents, --accent/--accent-rgb the retintable one.
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* ── 1. Scroll reveal (pairs with templates/Reveal.tsx) ───────────────── */
+
+/*
+ * The transition lives on `.is-revealed`, not `.reveal`, because the class is
+ * added AND removed: added → 0→1 must interpolate; removed → 1→0 must SNAP so
+ * content never flashes fading-out before fading back in. A transition
+ * declared only on the revealed state gives both for free.
+ */
+.reveal {
+  opacity: 0;
+  transform: translate3d(var(--reveal-x, 0px), var(--reveal-y, 24px), 0);
+}
+.reveal.is-revealed {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity var(--reveal-duration, 720ms) cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0ms),
+    transform var(--reveal-duration, 720ms) cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0ms);
+}
+
+/* ── 2. Hero / page entrance (pure CSS, plays before hydration) ───────── */
+
+/* The hidden frame comes from the keyframe's `from` — NEVER a base
+   `opacity: 0` rule, which would strand content if the animation is skipped. */
+@keyframes hero-rise {
+  from { opacity: 0; transform: translate3d(0, 30px, 0) scale(0.985); }
+  to   { opacity: 1; transform: none; }
+}
+.hero-rise {
+  opacity: 0;
+  animation: hero-rise 900ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* Inner-page stagger: same language, no observer (content is already in view). */
+.page-stack > * {
+  animation: hero-rise 560ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.page-stack > *:nth-child(1) { animation-delay: 0ms; }
+.page-stack > *:nth-child(2) { animation-delay: 50ms; }
+.page-stack > *:nth-child(3) { animation-delay: 100ms; }
+.page-stack > *:nth-child(4) { animation-delay: 150ms; }
+.page-stack > *:nth-child(5) { animation-delay: 200ms; }
+.page-stack > *:nth-child(6) { animation-delay: 250ms; }
+.page-stack > *:nth-child(7) { animation-delay: 300ms; }
+.page-stack > *:nth-child(8) { animation-delay: 350ms; }
+
+/* ── 3. Atmosphere ────────────────────────────────────────────────────── */
+
+/*
+ * Orbs: radial gradients with soft falloff, NOT `filter: blur()` — a gradient
+ * resolves once per layer, blur on a full-bleed element re-evaluates every
+ * composited frame (first-paint stutter on mid-range phones).
+ */
+@keyframes drift {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50%      { transform: translate3d(var(--drift-x, 5vw), var(--drift-y, -7vh), 0) scale(var(--drift-s, 1.15)); }
+}
+.orb {
+  position: absolute;
+  border-radius: 9999px;
+  pointer-events: none;
+  background: radial-gradient(circle, var(--orb-color, var(--accent, #0284c7)) 0%, transparent 70%);
+  opacity: var(--orb-opacity, 0.4);
+  animation: drift var(--drift-duration, 26s) ease-in-out infinite;
+  animation-delay: var(--drift-delay, 0s);
+}
+
+/* Faint engineering grid, masked so it dissolves toward the edges. */
+.grid-veil {
+  background-image:
+    linear-gradient(to right, color-mix(in srgb, var(--ink-100, #e8edf3) 7%, transparent) 1px, transparent 1px),
+    linear-gradient(to bottom, color-mix(in srgb, var(--ink-100, #e8edf3) 7%, transparent) 1px, transparent 1px);
+  background-size: 56px 56px;
+  mask-image: radial-gradient(ellipse 90% 70% at 50% 35%, #000 30%, transparent 78%);
+  -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 35%, #000 30%, transparent 78%);
+}
+
+/* Gradient sweep across a headline. NEVER on the same element as .hero-rise —
+   both set the `animation` shorthand and whichever wins silently cancels
+   the other. Nest instead: .hero-rise > .text-shine */
+@keyframes shine {
+  from { background-position: 0% 50%; }
+  to   { background-position: 200% 50%; }
+}
+.text-shine {
+  background: linear-gradient(
+    100deg,
+    var(--alpha, #0284c7) 0%,
+    var(--beta, #d97706) 28%,
+    var(--gamma, #8b5cf6) 55%,
+    var(--delta, #059669) 82%,
+    var(--alpha, #0284c7) 100%
+  );
+  background-size: 200% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: shine 9s linear infinite;
+}
+
+/* Expanding ring: eyebrow dot, trust/privacy stats (stagger 3 at 0/1.05/2.1s). */
+@keyframes pulse-ring {
+  0%   { transform: scale(0.85); opacity: 0.5; }
+  70%  { transform: scale(1.75); opacity: 0; }
+  100% { transform: scale(1.75); opacity: 0; }
+}
+
+/* Floating objects / product mocks. Different durations desync siblings. */
+@keyframes float-y {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50%      { transform: translate3d(0, -14px, 0); }
+}
+@keyframes float-3d {
+  0%, 100% { transform: translate3d(0, 0, 0) rotate3d(1, 1, 0, 0deg); }
+  50%      { transform: translate3d(0, -16px, 0) rotate3d(1, 1, 0, 8deg); }
+}
+.float-slow  { animation: float-3d 9s ease-in-out infinite; }
+
+/* Product-mock loops: typing dots, then metric bars growing from origin. */
+@keyframes blink {
+  0%, 75%, 100% { opacity: 0.25; transform: translateY(0); }
+  37%           { opacity: 1;    transform: translateY(-3px); }
+}
+@keyframes grow-x {
+  from { transform: scaleX(0); }
+  to   { transform: scaleX(1); }
+}
+
+/* Scroll cue — the "there is more below" signal; keep it above the fold. */
+@keyframes scroll-cue {
+  0%, 100% { transform: translate3d(0, 0, 0); opacity: 0.45; }
+  50%      { transform: translate3d(0, 7px, 0); opacity: 1; }
+}
+
+/* ── 4. Card / control feedback ───────────────────────────────────────── */
+
+/* One hover contract for every card in the app. */
+.card-lift {
+  transition:
+    transform 240ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 160ms ease;
+}
+.card-lift:hover,
+.card-lift:focus-visible {
+  transform: translateY(-2px);
+  border-color: var(--line-500, #354052);
+}
+
+/* M4 — shine sweep across a button/badge. Runs once per hover, not looping.
+   Container needs `position: relative`. */
+@keyframes btn-shine {
+  from { transform: translateX(-120%) skewX(-20deg); }
+  to   { transform: translateX(220%) skewX(-20deg); }
+}
+.shine-btn { position: relative; overflow: hidden; }
+.shine-btn::after {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 -40%;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.22), transparent);
+  transform: translateX(-120%) skewX(-20deg);
+  pointer-events: none;
+}
+.shine-btn:hover::after,
+.shine-btn:focus-visible::after {
+  animation: btn-shine 700ms ease;
+}
+
+/* M7 — press ripple (center-origin approximation; no JS needed). */
+@keyframes ripple-out {
+  to { transform: translate(-50%, -50%) scale(30); opacity: 0; }
+}
+.ripple { position: relative; overflow: hidden; }
+.ripple::after {
+  content: '';
+  position: absolute;
+  inset: 50% auto auto 50%;
+  width: 10px;
+  height: 10px;
+  border-radius: 9999px;
+  background: currentColor;
+  transform: translate(-50%, -50%) scale(0);
+  opacity: 0.35;
+  pointer-events: none;
+}
+.ripple:active::after { animation: ripple-out 450ms ease-out; }
+
+/* M13 — rotating conic border. ONE hero-level element only (e.g. final CTA). */
+@keyframes border-spin { to { transform: rotate(1turn); } }
+.glow-border { position: relative; }
+.glow-border::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: inherit;
+  padding: 1px;
+  background: conic-gradient(from 0deg, transparent, var(--accent, #0284c7), transparent 40%);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  animation: border-spin 4s linear infinite;
+  pointer-events: none;
+}
+
+/* ── 5. Marquee / logo ticker ─────────────────────────────────────────── */
+/* Duplicate the content exactly once; translate -50% loops seamlessly. */
+@keyframes marquee {
+  from { transform: translate3d(0, 0, 0); }
+  to   { transform: translate3d(-50%, 0, 0); }
+}
+.marquee {
+  overflow: hidden;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 8%, #000 92%, transparent);
+}
+.marquee-track {
+  display: flex;
+  width: max-content;
+  animation: marquee 32s linear infinite;
+}
+.marquee:hover .marquee-track,
+.marquee:focus-within .marquee-track {
+  animation-play-state: paused;
+}
+.no-scrollbar { scrollbar-width: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* ── 6. 3D layers (pairs with references/3d.md) ───────────────────────── */
+
+/* A2 — scroll-driven 3D entrance. JS adds `.is-revealed` (same observer
+   machinery as `.reveal`); transition on the revealed state so removal snaps. */
+.reveal-3d {
+  opacity: 0;
+  transform: perspective(1000px) rotateX(10deg) translateY(40px);
+}
+.reveal-3d.is-revealed {
+  opacity: 1;
+  transform: none;
+  transition:
+    opacity 700ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* A2 — CSS-native variant for engines with scroll-driven animations.
+   Progressive enhancement: no support = no animation, content visible. */
+@keyframes tilt-in {
+  from { opacity: 0; transform: perspective(1000px) rotateX(14deg) translateZ(-60px); }
+  to   { opacity: 1; transform: none; }
+}
+.tilt-in {
+  animation: tilt-in linear both;
+  animation-timeline: view();
+  animation-range: entry 0% cover 30%;
+}
+
+/* B2 — flip card. JS toggles `.is-flipped` for click/keyboard; hover is a
+   pointer nicety. Faces need backface-visibility or the back shows mirrored. */
+.flip-scene { perspective: 1200px; }
+.flip-inner {
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+.flip-scene.is-flipped .flip-inner,
+.flip-scene:hover .flip-inner {
+  transform: rotateY(180deg);
+}
+.flip-face {
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+.flip-face--back { transform: rotateY(180deg); }
+/* The scene needs a fixed height because both faces are absolute: */
+.flip-scene { min-height: 16rem; }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Reduced motion — REQUIRED, and required in three layers:
+
+   1. the blanket duration override below (catches ordinary transitions)
+   2. explicit skips for class-driven hidden states and delays —
+      a duration override does NOT fix `.reveal` (hidden by class → would sit
+      at opacity: 0 forever) or `.hero-rise`/`.page-stack` (animation-delay is
+      untouched → content hidden up to 350ms even at 0.01ms duration)
+   3. JS bail-outs in every observer/rAF/scroll hook (Reveal, CountUp,
+      TiltCard, MagneticButton, parallax, WebGL mount guard)
+
+   Every new animation class added above MUST be listed here.
+   ═══════════════════════════════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Class-driven hidden states — skip them entirely, don't animate them away. */
+  .reveal,
+  .reveal-3d { opacity: 1 !important; transform: none !important; transition: none !important; }
+
+  /* Delayed entrances — `animation-delay` survives the duration override. */
+  .hero-rise,
+  .page-stack > * { opacity: 1 !important; animation: none !important; }
+
+  /* Infinite loops — decorative, stop them. */
+  .orb,
+  .text-shine,
+  .marquee-track,
+  .float-slow,
+  .glow-border::before { animation: none !important; }
+
+  /* Reduced motion still gets the CONTENT: scroll-driven transforms resolve
+     to their end state (visible), no rotation. */
+  .tilt-in { animation: none !important; opacity: 1 !important; transform: none !important; }
+
+  /* Hover-triggered flourishes that don't depend on duration. */
+  .shine-btn::after { animation: none !important; }
+}

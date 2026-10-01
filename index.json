@@ -1,0 +1,22 @@
+{
+  "skills": [
+    {
+      "name": "animated-landing-page",
+      "version": "1",
+      "files": [
+        "SKILL.md",
+        "references/structure.md",
+        "references/design-system.md",
+        "references/animations.md",
+        "references/micro-interactions.md",
+        "references/3d.md",
+        "references/performance-accessibility.md",
+        "templates/Reveal.tsx",
+        "templates/CountUp.tsx",
+        "templates/TiltCard.tsx",
+        "templates/MagneticButton.tsx",
+        "templates/landing-motion.css"
+      ]
+    }
+  ]
+}
